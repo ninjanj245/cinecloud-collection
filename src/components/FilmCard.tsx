@@ -34,7 +34,7 @@ const FilmCard = ({ film, onClose, small = false }: FilmCardProps) => {
 
   if (small) {
     return (
-      <div className={film.genre === 'horror' ? "bg-light-green rounded-lg overflow-hidden" : "bg-light-pink rounded-lg overflow-hidden"}>
+      <div className={film.genre === 'horror' ? "bg-light-green bg-opacity-20 rounded-lg overflow-hidden" : "bg-light-pink rounded-lg overflow-hidden"}>
         {film.imageUrl && (
           <div className="relative w-full h-48">
             <img src={film.imageUrl} alt={film.title} className="w-full h-full object-cover" />
@@ -49,7 +49,7 @@ const FilmCard = ({ film, onClose, small = false }: FilmCardProps) => {
   }
 
   return (
-    <div className="bg-light-green rounded-3xl overflow-hidden max-w-md w-full">
+    <div className="bg-light-green bg-opacity-20 rounded-3xl overflow-hidden max-w-md w-full">
       {onClose && (
         <button 
           onClick={onClose} 
@@ -67,7 +67,7 @@ const FilmCard = ({ film, onClose, small = false }: FilmCardProps) => {
       
       <div className="p-6">
         <div className="flex justify-between items-start mb-6">
-          <h3 className="text-3xl font-bold">{film.title}</h3>
+          <h3 className="text-2xl font-bold">{film.title}</h3>
           <p className="text-xl">ID nr {film.idNumber}</p>
         </div>
         

@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
@@ -58,7 +59,7 @@ const AddFilm = () => {
     });
     
     toast({
-      title: "Film added",
+      title: "Party on, Garth!",
       description: `${title} has been added to your library`,
     });
     
@@ -120,7 +121,7 @@ const AddFilm = () => {
       }
       
       toast({
-        title: "Bulk import successful",
+        title: "Party on, Garth!",
         description: `Added ${addedCount} films to your library`,
       });
       

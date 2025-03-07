@@ -93,9 +93,17 @@ const Home = () => {
               <div 
                 key={film.id} 
                 onClick={() => setSelectedFilm(film.id)}
-                className="cursor-pointer"
+                className="cursor-pointer bg-light-green bg-opacity-20 rounded-lg overflow-hidden"
               >
-                <FilmCard film={film} small />
+                {film.imageUrl && (
+                  <div className="relative w-full h-48">
+                    <img src={film.imageUrl} alt={film.title} className="w-full h-full object-cover" />
+                  </div>
+                )}
+                <div className="p-3">
+                  <p className="font-bold text-lg">{film.title}</p>
+                  <p className="text-sm">ID nr {film.idNumber}</p>
+                </div>
               </div>
             ))}
           </div>

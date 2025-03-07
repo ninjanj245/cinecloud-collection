@@ -1,22 +1,22 @@
 
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Filter, SortDesc } from 'lucide-react';
+import { ArrowLeft, Filter, SortDesc, ChevronDown, ChevronUp } from 'lucide-react';
 import { useFilms, Film } from '@/context/FilmContext';
 import SearchBar from '@/components/SearchBar';
 import BottomNavigation from '@/components/BottomNavigation';
 
 type ViewMode = 'list' | 'grid';
 type SortOption = 'title' | 'director' | 'year' | 'idNumber' | 'dateAdded';
+type FilterCategory = 'director' | 'actor' | 'genre' | 'year';
 
 interface FilterOptions {
-  genre?: string;
-  year?: string;
-  tags?: string[];
+  category: FilterCategory;
+  value: string;
 }
 
 const Library = () => {
-  const { films, searchFilms, sortFilms, filterFilms } = useFilms();
+  const { films, searchFilms, sortFilms } = useFilms();
   const navigate = useNavigate();
   
   const [searchQuery, setSearchQuery] = useState('');
@@ -24,11 +24,14 @@ const Library = () => {
   const [sortBy, setSortBy] = useState<SortOption>('title');
   const [showFilters, setShowFilters] = useState(false);
   const [showSortOptions, setShowSortOptions] = useState(false);
-  const [filterOptions, setFilterOptions] = useState<FilterOptions>({});
+  const [filterOptions, setFilterOptions] = useState<FilterOptions | null>(null);
+  const [expandedFilmId, setExpandedFilmId] = useState<string | null>(null);
   
   const [displayedFilms, setDisplayedFilms] = useState<Film[]>([]);
   
-  // Extract unique genres and years for filter dropdowns
+  // Extract unique values for filter dropdowns
+  const directors = Array.from(new Set(films.filter(film => film.director).map(film => film.director)));
+  const actors = Array.from(new Set(films.filter(film => film.actors).flatMap(film => film.actors?.split(';') || []).map(actor => actor.trim())));
   const genres = Array.from(new Set(films.filter(film => film.genre).map(film => film.genre as string)));
   const years = Array.from(new Set(films.filter(film => film.year).map(film => film.year as string)));
   
@@ -40,11 +43,27 @@ const Library = () => {
       result = searchFilms(searchQuery);
     }
     
-    result = filterFilms(result, filterOptions);
+    if (filterOptions) {
+      result = result.filter(film => {
+        switch (filterOptions.category) {
+          case 'director':
+            return film.director === filterOptions.value;
+          case 'actor':
+            return film.actors?.includes(filterOptions.value);
+          case 'genre':
+            return film.genre === filterOptions.value;
+          case 'year':
+            return film.year === filterOptions.value;
+          default:
+            return true;
+        }
+      });
+    }
+    
     result = sortFilms(result, sortBy);
     
     setDisplayedFilms(result);
-  }, [films, searchQuery, sortBy, filterOptions, searchFilms, filterFilms, sortFilms]);
+  }, [films, searchQuery, sortBy, filterOptions, searchFilms, sortFilms]);
   
   const handleSearch = (query: string) => {
     setSearchQuery(query);
@@ -69,20 +88,22 @@ const Library = () => {
     setShowSortOptions(false);
   };
   
-  const handleSetFilter = (key: keyof FilterOptions, value: string | null) => {
-    setFilterOptions(prev => {
-      if (value === null) {
-        const newFilters = { ...prev };
-        delete newFilters[key];
-        return newFilters;
-      }
-      return { ...prev, [key]: value };
-    });
+  const handleSetFilter = (category: FilterCategory, value: string) => {
+    setFilterOptions({ category, value });
+    setShowFilters(false);
   };
   
   const clearFilters = () => {
-    setFilterOptions({});
+    setFilterOptions(null);
     setShowFilters(false);
+  };
+  
+  const toggleExpandFilm = (filmId: string) => {
+    if (expandedFilmId === filmId) {
+      setExpandedFilmId(null);
+    } else {
+      setExpandedFilmId(filmId);
+    }
   };
 
   const renderListView = () => (
@@ -91,13 +112,59 @@ const Library = () => {
         <p className="text-center py-8 text-gray-500">No films found</p>
       ) : (
         displayedFilms.map((film) => (
-          <div
-            key={film.id}
-            onClick={() => handleViewFilm(film)}
-            className="bg-gray-300 p-4 rounded-lg flex justify-between items-center cursor-pointer"
-          >
-            <span className="font-semibold">{film.title}</span>
-            <span>Nr #{film.idNumber}</span>
+          <div key={film.id} className="overflow-hidden">
+            <div
+              onClick={() => toggleExpandFilm(film.id)}
+              className="bg-gray-300 p-4 rounded-lg flex justify-between items-center cursor-pointer"
+            >
+              <span className="font-semibold">{film.title}</span>
+              <div className="flex items-center">
+                <span className="mr-2">Nr #{film.idNumber}</span>
+                {expandedFilmId === film.id ? 
+                  <ChevronUp className="w-5 h-5" /> : 
+                  <ChevronDown className="w-5 h-5" />
+                }
+              </div>
+            </div>
+            
+            {/* Expanded details */}
+            {expandedFilmId === film.id && (
+              <div className="bg-gray-200 p-4 rounded-b-lg transition-all duration-300 ease-in-out transform origin-top">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-sm text-gray-600">Director:</p>
+                    <p>{film.director}</p>
+                  </div>
+                  {film.actors && (
+                    <div>
+                      <p className="text-sm text-gray-600">Actors:</p>
+                      <p>{film.actors}</p>
+                    </div>
+                  )}
+                  {film.genre && (
+                    <div>
+                      <p className="text-sm text-gray-600">Genre:</p>
+                      <p>{film.genre}</p>
+                    </div>
+                  )}
+                  {film.year && (
+                    <div>
+                      <p className="text-sm text-gray-600">Year:</p>
+                      <p>{film.year}</p>
+                    </div>
+                  )}
+                </div>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleViewFilm(film);
+                  }}
+                  className="bg-black text-white px-4 py-2 rounded-lg mt-4"
+                >
+                  View Details
+                </button>
+              </div>
+            )}
           </div>
         ))
       )}
@@ -157,7 +224,7 @@ const Library = () => {
           className="flex items-center justify-center p-2 border border-gray-300 rounded-lg"
         >
           <Filter className="w-4 h-4 mr-2" />
-          <span>Advanced Filter</span>
+          <span>Filters</span>
         </button>
         
         <button
@@ -218,16 +285,84 @@ const Library = () => {
       {/* Filter options dropdown */}
       {showFilters && (
         <div className="bg-white shadow-lg rounded-lg p-4 mt-2 border border-gray-200">
-          <h3 className="font-semibold mb-2">Filter options</h3>
+          <h3 className="font-semibold mb-2">Filter by category</h3>
           
           <div className="mb-4">
-            <label className="block text-sm font-medium mb-1">Genre</label>
+            <div className="flex items-center mb-1">
+              <input 
+                type="radio" 
+                id="director-category" 
+                name="filter-category" 
+                checked={filterOptions?.category === 'director'}
+                onChange={() => {}} 
+                className="mr-2"
+              />
+              <label htmlFor="director-category" className="text-sm font-medium">Director</label>
+            </div>
             <select
-              value={filterOptions.genre || ''}
-              onChange={(e) => handleSetFilter('genre', e.target.value || null)}
+              disabled={filterOptions?.category !== 'director'}
+              value={filterOptions?.category === 'director' ? filterOptions.value : ''}
+              onChange={(e) => handleSetFilter('director', e.target.value)}
               className="w-full p-2 border border-gray-300 rounded"
+              onClick={() => setFilterOptions(prev => prev?.category === 'director' ? prev : { category: 'director', value: '' })}
             >
-              <option value="">All genres</option>
+              <option value="">Select a director</option>
+              {directors.map((director) => (
+                <option key={director} value={director}>
+                  {director}
+                </option>
+              ))}
+            </select>
+          </div>
+          
+          <div className="mb-4">
+            <div className="flex items-center mb-1">
+              <input 
+                type="radio" 
+                id="actor-category" 
+                name="filter-category" 
+                checked={filterOptions?.category === 'actor'} 
+                onChange={() => {}}
+                className="mr-2"
+              />
+              <label htmlFor="actor-category" className="text-sm font-medium">Actor</label>
+            </div>
+            <select
+              disabled={filterOptions?.category !== 'actor'}
+              value={filterOptions?.category === 'actor' ? filterOptions.value : ''}
+              onChange={(e) => handleSetFilter('actor', e.target.value)}
+              className="w-full p-2 border border-gray-300 rounded"
+              onClick={() => setFilterOptions(prev => prev?.category === 'actor' ? prev : { category: 'actor', value: '' })}
+            >
+              <option value="">Select an actor</option>
+              {actors.map((actor) => (
+                <option key={actor} value={actor}>
+                  {actor}
+                </option>
+              ))}
+            </select>
+          </div>
+          
+          <div className="mb-4">
+            <div className="flex items-center mb-1">
+              <input 
+                type="radio" 
+                id="genre-category" 
+                name="filter-category" 
+                checked={filterOptions?.category === 'genre'} 
+                onChange={() => {}}
+                className="mr-2"
+              />
+              <label htmlFor="genre-category" className="text-sm font-medium">Genre</label>
+            </div>
+            <select
+              disabled={filterOptions?.category !== 'genre'}
+              value={filterOptions?.category === 'genre' ? filterOptions.value : ''}
+              onChange={(e) => handleSetFilter('genre', e.target.value)}
+              className="w-full p-2 border border-gray-300 rounded"
+              onClick={() => setFilterOptions(prev => prev?.category === 'genre' ? prev : { category: 'genre', value: '' })}
+            >
+              <option value="">Select a genre</option>
               {genres.map((genre) => (
                 <option key={genre} value={genre}>
                   {genre}
@@ -237,13 +372,25 @@ const Library = () => {
           </div>
           
           <div className="mb-4">
-            <label className="block text-sm font-medium mb-1">Year</label>
+            <div className="flex items-center mb-1">
+              <input 
+                type="radio" 
+                id="year-category" 
+                name="filter-category" 
+                checked={filterOptions?.category === 'year'} 
+                onChange={() => {}}
+                className="mr-2"
+              />
+              <label htmlFor="year-category" className="text-sm font-medium">Year</label>
+            </div>
             <select
-              value={filterOptions.year || ''}
-              onChange={(e) => handleSetFilter('year', e.target.value || null)}
+              disabled={filterOptions?.category !== 'year'}
+              value={filterOptions?.category === 'year' ? filterOptions.value : ''}
+              onChange={(e) => handleSetFilter('year', e.target.value)}
               className="w-full p-2 border border-gray-300 rounded"
+              onClick={() => setFilterOptions(prev => prev?.category === 'year' ? prev : { category: 'year', value: '' })}
             >
-              <option value="">All years</option>
+              <option value="">Select a year</option>
               {years.map((year) => (
                 <option key={year} value={year}>
                   {year}
