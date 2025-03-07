@@ -24,6 +24,8 @@ type FilmContextType = {
   searchFilms: (query: string) => Film[];
   sortFilms: (films: Film[], sortBy: string) => Film[];
   filterFilms: (films: Film[], filters: Record<string, any>) => Film[];
+  getStorageUsedPercentage: () => number;
+  getMostAddedGenre: () => { genre: string; count: number };
 };
 
 const FilmContext = createContext<FilmContextType | undefined>(undefined);
@@ -134,6 +136,34 @@ export const FilmProvider = ({ children }: { children: React.ReactNode }) => {
     });
   };
 
+  const getStorageUsedPercentage = () => {
+    const totalStorageCapacity = 10000; // in MB
+    const usedStorage = films.length * 2; // Each film is estimated at 2MB
+    return Math.min(Math.round((usedStorage / totalStorageCapacity) * 100), 100);
+  };
+
+  const getMostAddedGenre = () => {
+    const genreCounts: Record<string, number> = {};
+    
+    films.forEach(film => {
+      if (film.genre) {
+        genreCounts[film.genre] = (genreCounts[film.genre] || 0) + 1;
+      }
+    });
+    
+    let mostAddedGenre = "none";
+    let maxCount = 0;
+    
+    for (const [genre, count] of Object.entries(genreCounts)) {
+      if (count > maxCount) {
+        mostAddedGenre = genre;
+        maxCount = count;
+      }
+    }
+    
+    return { genre: mostAddedGenre, count: maxCount };
+  };
+
   return (
     <FilmContext.Provider
       value={{
@@ -146,7 +176,9 @@ export const FilmProvider = ({ children }: { children: React.ReactNode }) => {
         getFilmById,
         searchFilms,
         sortFilms,
-        filterFilms
+        filterFilms,
+        getStorageUsedPercentage,
+        getMostAddedGenre
       }}
     >
       {children}

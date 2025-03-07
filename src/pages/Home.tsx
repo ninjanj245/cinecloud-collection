@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useFilms } from '@/context/FilmContext';
 import { useAuth } from '@/context/AuthContext';
@@ -8,42 +8,38 @@ import FilmCard from '@/components/FilmCard';
 import BottomNavigation from '@/components/BottomNavigation';
 
 const Home = () => {
-  const { films, recentSearches } = useFilms();
+  const { films, recentSearches, getStorageUsedPercentage, getMostAddedGenre } = useFilms();
   const { user } = useAuth();
   const navigate = useNavigate();
   const [selectedFilm, setSelectedFilm] = useState<string | null>(null);
 
   // Get the 5 most recently added films
-  const recentFilms = [...films].sort(
-    (a, b) => new Date(b.dateAdded).getTime() - new Date(a.dateAdded).getTime()
-  ).slice(0, 5);
+  const recentFilms = useMemo(() => {
+    return [...films]
+      .sort((a, b) => new Date(b.dateAdded).getTime() - new Date(a.dateAdded).getTime())
+      .slice(0, 5);
+  }, [films]);
 
   // Calculate statistics
   const totalFilms = films.length;
   
   // Calculate days since last film was added
-  let daysSinceLastUpload = 0;
-  if (films.length > 0) {
-    const latestFilmDate = new Date(Math.max(...films.map(film => new Date(film.dateAdded).getTime())));
+  const daysSinceLastUpload = useMemo(() => {
+    if (films.length === 0) return 0;
+    
+    const latestFilmDate = new Date(Math.max(...films.map(film => 
+      new Date(film.dateAdded).getTime()
+    )));
+    
     const diffTime = Math.abs(new Date().getTime() - latestFilmDate.getTime());
-    daysSinceLastUpload = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-  }
+    return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  }, [films]);
 
-  // Calculate most added genre
-  const genreCounts: Record<string, number> = {};
-  films.forEach(film => {
-    if (film.genre) {
-      genreCounts[film.genre] = (genreCounts[film.genre] || 0) + 1;
-    }
-  });
-  let mostAddedGenre = "none";
-  let maxCount = 0;
-  for (const [genre, count] of Object.entries(genreCounts)) {
-    if (count > maxCount) {
-      mostAddedGenre = genre;
-      maxCount = count;
-    }
-  }
+  // Get storage used percentage
+  const storagePercentage = getStorageUsedPercentage();
+  
+  // Get most added genre
+  const { genre: mostAddedGenre, count: genreCount } = getMostAddedGenre();
 
   return (
     <div className="pb-16 px-4 max-w-3xl mx-auto">
@@ -120,11 +116,20 @@ const Home = () => {
           </div>
           <div className="bg-light-gray p-4 rounded-lg">
             <p className="text-center text-gray-600">Most Added Genre</p>
-            <p className="text-center text-5xl font-bold">{mostAddedGenre}</p>
+            <p className="text-center text-3xl font-bold">{mostAddedGenre}</p>
+            {genreCount > 0 && (
+              <p className="text-center text-sm text-gray-600">({genreCount} films)</p>
+            )}
           </div>
           <div className="bg-light-gray p-4 rounded-lg">
             <p className="text-center text-gray-600">Total Storage Used</p>
-            <p className="text-center text-5xl font-bold">2%</p>
+            <p className="text-center text-3xl font-bold">{storagePercentage}%</p>
+            <div className="w-full bg-gray-200 rounded-full h-2.5 mt-2">
+              <div 
+                className="bg-coral h-2.5 rounded-full" 
+                style={{ width: `${storagePercentage}%` }}
+              ></div>
+            </div>
           </div>
         </div>
       </div>
