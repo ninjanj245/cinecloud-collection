@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { toast } from '@/hooks/use-toast';
@@ -11,6 +11,7 @@ const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
+  const formRef = useRef<HTMLFormElement>(null);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -35,8 +36,18 @@ const Login = () => {
       });
       navigate('/');
     } else {
+      // Add shake animation to the form
+      if (formRef.current) {
+        formRef.current.classList.add('shake');
+        setTimeout(() => {
+          if (formRef.current) {
+            formRef.current.classList.remove('shake');
+          }
+        }, 500);
+      }
+      
       toast({
-        title: "Login failed",
+        title: "No way, Jose!",
         description: "Invalid name or password",
         variant: "destructive",
       });
@@ -50,7 +61,7 @@ const Login = () => {
       <div className="w-full max-w-md">
         <h1 className="text-4xl font-bold mb-8 text-center">Log In</h1>
         
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form ref={formRef} onSubmit={handleSubmit} className="space-y-6">
           <div>
             <label htmlFor="name" className="block text-sm font-medium mb-1">
               Name

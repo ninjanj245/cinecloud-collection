@@ -54,8 +54,7 @@ const Home = () => {
         </button>
         <button 
           onClick={() => navigate('/library')}
-          className="border-3 border-black text-black font-bold py-4 px-6 rounded-lg text-xl"
-          style={{ borderWidth: '3px' }}
+          className="border-2 border-black text-black font-bold py-4 px-6 rounded-lg text-xl"
         >
           View Library
         </button>
@@ -74,10 +73,16 @@ const Home = () => {
               <div
                 key={`search-${index}`}
                 onClick={() => navigate(`/search?q=${encodeURIComponent(search)}`)}
-                className="bg-light-pink p-4 rounded-lg cursor-pointer"
+                className="bg-light-pink p-4 rounded-lg cursor-pointer shadow-md shadow-coral"
               >
-                <p className="text-lg font-semibold">Search #{index + 1}</p>
-                <p className="text-sm text-gray-600">{search}</p>
+                <p className="text-lg font-semibold text-center">{search}</p>
+                <p className="text-sm text-gray-600 text-center">
+                  {films.filter(film => 
+                    film.title.toLowerCase().includes(search.toLowerCase()) || 
+                    (film.director && film.director.toLowerCase().includes(search.toLowerCase())) ||
+                    (film.actors && film.actors.toLowerCase().includes(search.toLowerCase()))
+                  ).length} results
+                </p>
               </div>
             ))}
           </div>
@@ -93,7 +98,7 @@ const Home = () => {
               <div 
                 key={film.id} 
                 onClick={() => setSelectedFilm(film.id)}
-                className="cursor-pointer bg-light-green bg-opacity-20 rounded-lg overflow-hidden"
+                className="cursor-pointer bg-light-green bg-opacity-20 rounded-lg overflow-hidden shadow-md shadow-lime-green"
               >
                 {film.imageUrl && (
                   <div className="relative w-full h-48">
@@ -101,8 +106,8 @@ const Home = () => {
                   </div>
                 )}
                 <div className="p-3">
-                  <p className="font-bold text-lg">{film.title}</p>
-                  <p className="text-sm">ID nr {film.idNumber}</p>
+                  <p className="font-bold text-lg text-center">{film.title}</p>
+                  <p className="text-sm text-center">ID nr {film.idNumber}</p>
                 </div>
               </div>
             ))}
@@ -115,22 +120,22 @@ const Home = () => {
         <h2 className="text-2xl font-bold mb-4">Stats</h2>
         <div className="grid grid-cols-2 gap-4">
           <div className="bg-light-gray p-4 rounded-lg">
-            <p className="text-center text-gray-600">Films in storage</p>
+            <p className="text-center text-gray-600 text-[11px]">Films in storage</p>
             <p className="text-center text-5xl font-bold">{totalFilms}</p>
           </div>
           <div className="bg-light-gray p-4 rounded-lg">
-            <p className="text-center text-gray-600">Days since last film added</p>
+            <p className="text-center text-gray-600 text-[11px]">Days since last film added</p>
             <p className="text-center text-5xl font-bold">{daysSinceLastUpload}</p>
           </div>
           <div className="bg-light-gray p-4 rounded-lg">
-            <p className="text-center text-gray-600">Most Added Genre</p>
+            <p className="text-center text-gray-600 text-[11px]">Most Added Genre</p>
             <p className="text-center text-3xl font-bold">{mostAddedGenre}</p>
             {genreCount > 0 && (
               <p className="text-center text-sm text-gray-600">({genreCount} films)</p>
             )}
           </div>
           <div className="bg-light-gray p-4 rounded-lg">
-            <p className="text-center text-gray-600">Total Storage Used</p>
+            <p className="text-center text-gray-600 text-[11px]">Total Storage Used</p>
             <p className="text-center text-3xl font-bold">{storagePercentage}%</p>
             <div className="w-full bg-gray-200 rounded-full h-2.5 mt-2">
               <div 

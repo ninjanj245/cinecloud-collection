@@ -42,7 +42,7 @@ const SearchBar = ({ onSearch, navigateOnSearch = false }: SearchBarProps) => {
         onChange={(e) => setQuery(e.target.value)}
         onKeyDown={handleKeyPress}
         placeholder="Search"
-        className="w-full p-3 pr-12 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
+        className="w-full p-3 pr-12 border-2 border-black rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
       />
       <button
         onClick={handleSearch}
