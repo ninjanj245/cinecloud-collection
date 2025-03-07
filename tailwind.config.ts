@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -61,7 +62,15 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
-				}
+				},
+				// Custom colors for our film app
+				coral: '#FF6B6B',
+				'coral-light': '#FF8E8E',
+				'lime-green': '#AAFF00',
+				'lime-green-20': 'rgba(170, 255, 0, 0.2)',
+				'light-pink': '#FFD0D0',
+				'light-green': '#D0FFD0',
+				'light-gray': 'rgba(211, 211, 211, 0.25)'
 			},
 			borderRadius: {
 				lg: 'var(--radius)',
